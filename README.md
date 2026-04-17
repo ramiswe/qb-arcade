@@ -1,2 +1,0 @@
-# qb-arcade
-RETRO ARCADE SYSTEM FOR QB-CORE

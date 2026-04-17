@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: transparent; }
+
+        #arcade-wrapper {
+            display: none;
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 1050px; /* Un poco más ancho para que quepa el manual */
+            height: 650px;
+            background: #1a1a1a;
+            border: 4px solid #444;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+        }
+
+        #drag-handle {
+            width: 100%;
+            height: 35px;
+            background: #222;
+            color: #00d4ff;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Contenedor principal: Juego a la izquierda, Manual a la derecha */
+        #main-layout {
+            display: flex;
+            width: 100%;
+            height: calc(100% - 35px);
+        }
+
+        #iframe-container {
+            flex-grow: 1; /* El juego ocupa todo el espacio sobrante */
+            position: relative;
+            background: black;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Panel de Controles Retro */
+        #controls-panel {
+            width: 220px;
+            background: #222;
+            border-left: 2px solid #444;
+            padding: 15px;
+            color: white;
+            font-family: 'Consolas', monospace;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-group { border-bottom: 1px solid #444; padding-bottom: 8px; }
+        .control-group:last-child { border-bottom: none; }
+        
+        .title { color: #ff00ff; font-weight: bold; font-size: 14px; margin-bottom: 5px; display: block; }
+        .key-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; }
+        .key { background: #444; padding: 1px 6px; border-radius: 3px; color: #00ff00; border: 1px solid #666; }
+
+        .close-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="arcade-wrapper">
+        <div id="drag-handle">
+            <span>🕹️ RETRO-ARCADE SYSTEM</span>
+            <button class="close-btn" onclick="closeArcade()">CERRAR (ESC)</button>
+        </div>
+        
+        <div id="main-layout">
+            <div id="iframe-container">
+                <iframe id="arcade-iframe" src="" allow="autoplay; gamepad; fullscreen"></iframe>
+            </div>
+
+            <div id="controls-panel">
+                <span class="title">SISTEMA</span>
+                <div class="control-group">
+                    <div class="key-row"><span>Insertar Moneda</span><span class="key">5</span></div>
+                    <div class="key-row"><span>Start P1</span><span class="key">1</span></div>
+                    <div class="key-row"><span>Start P2</span><span class="key">2</span></div>
+                </div>
+
+                <span class="title">MOVIMIENTO</span>
+                <div class="control-group">
+                    <div class="key-row"><span>Moverse</span><span class="key">Flechas</span></div>
+                </div>
+
+                <span class="title">ACCIONES</span>
+                <div class="control-group">
+                    <div class="key-row"><span>Botón A</span><span class="key">Ctrl</span></div>
+                    <div class="key-row"><span>Botón B</span><span class="key">Alt</span></div>
+                    <div class="key-row"><span>Botón C</span><span class="key">Espacio</span></div>
+                    <div class="key-row"><span>Botón D</span><span class="key">Shift Izd</span></div>
+                </div>
+
+                <div style="font-size: 10px; color: #888; margin-top: auto; text-align: center;">
+                    * Haz clic en el juego para activar el teclado.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function() {
+            $("#arcade-wrapper").draggable({ handle: "#drag-handle", containment: "window" });
+            $("#arcade-wrapper").resizable({
+                minWidth: 600, minHeight: 400,
+                start: function() { $('#arcade-iframe').css('pointer-events', 'none'); },
+                stop: function() { $('#arcade-iframe').css('pointer-events', 'auto'); }
+            });
+        });
+
+        window.addEventListener('message', function(event) {
+            if (event.data.action === "open") {
+                document.getElementById('arcade-wrapper').style.display = 'block';
+                document.getElementById('arcade-iframe').src = event.data.url;
+                setTimeout(() => { document.getElementById('arcade-iframe').focus(); }, 1000);
+            }
+        });
+
+        function closeArcade() {
+            document.getElementById('arcade-wrapper').style.display = 'none';
+            document.getElementById('arcade-iframe').src = '';
+            fetch(`https://${GetParentResourceName()}/close`, { method: 'POST' });
+        }
+
+        document.onkeyup = function (data) {
+            if (data.key === "Escape") { closeArcade(); }
+        };
+
+        document.getElementById('arcade-wrapper').onclick = function() {
+            document.getElementById('arcade-iframe').focus();
+        };
+    </script>
+</body>
+</html>
